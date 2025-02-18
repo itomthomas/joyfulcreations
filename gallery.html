@@ -65,32 +65,11 @@
           </div>
 
       <div class="container-fluid venue-gallery-container" data-aos="fade-up" data-aos-delay="100">
-        <div class="row g-0">
+        <div id="image-gallery" class="row g-0">
+          <!-- Images will be loaded dynamically here -->
 
-          <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            <div class="venue-gallery">
-              <a href="https://lh3.googleusercontent.com/pw/AP1GczPU4NQgXput39ZBvIOdecXx5c4KQMPczLca774r6eVHtx38tBRYUYKdBk-ICeT0K1ZR_KPNsxcxen7RaDo2x2I6i3CwQWwzCo0Ud0eiHWFB2g9MeqsF3w8tWbIrmYb06-1gWbxiyMrdNHeskuNE5d0=w450-h300-s-no" class="glightbox" data-gall="venue-gallery">
-                <img loading="lazy" src="https://lh3.googleusercontent.com/pw/AP1GczPU4NQgXput39ZBvIOdecXx5c4KQMPczLca774r6eVHtx38tBRYUYKdBk-ICeT0K1ZR_KPNsxcxen7RaDo2x2I6i3CwQWwzCo0Ud0eiHWFB2g9MeqsF3w8tWbIrmYb06-1gWbxiyMrdNHeskuNE5d0=w250-h250-s-no" alt="" class="img-fluid">
-              </a>
-            </div>
-          </div>
-
-          <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            <div class="venue-gallery">
-              <a href="https://lh3.googleusercontent.com/pw/AP1GczN8e_pmLnSJqzhgnAzBn19S-lGAs45r6p_fZvG-JvgUuGKg6uFh3xPoAJae4b13h3Ra8aHGMht8YopaDDS49om1y1A9OkJHSEV46Kd2jBhG5L_WM8CXJjfKR64dIBjuwzIAIIC-6kzq2tZGwFVQC2E=w502-h627-s-no" class="glightbox" data-gall="venue-gallery">
-                <img loading="lazy" src="https://lh3.googleusercontent.com/pw/AP1GczN8e_pmLnSJqzhgnAzBn19S-lGAs45r6p_fZvG-JvgUuGKg6uFh3xPoAJae4b13h3Ra8aHGMht8YopaDDS49om1y1A9OkJHSEV46Kd2jBhG5L_WM8CXJjfKR64dIBjuwzIAIIC-6kzq2tZGwFVQC2E=w250-h250-s-no" alt="" class="img-fluid">
-              </a>
-            </div>
-          </div>
-
-          <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            <div class="venue-gallery">
-              <a href="https://lh3.googleusercontent.com/pw/AP1GczM_CG6RLI-e02VOi4VPGFR_lVgy-vmUObIWahqrHUXglIAP4Wty2gi-lh3wkAW9MUJ15IfqMhkwEHitCwUivBZjI1cAxziVwIfb8g597SsYhdcjsGLZGpwUWnpSudYddOekPIlmg3LPEiTDB8nTbIk=w502-h627-s-no" class="glightbox" data-gall="venue-gallery">
-                <img loading="lazy" src="https://lh3.googleusercontent.com/pw/AP1GczM_CG6RLI-e02VOi4VPGFR_lVgy-vmUObIWahqrHUXglIAP4Wty2gi-lh3wkAW9MUJ15IfqMhkwEHitCwUivBZjI1cAxziVwIfb8g597SsYhdcjsGLZGpwUWnpSudYddOekPIlmg3LPEiTDB8nTbIk=w250-h250-s-no" alt="" class="img-fluid">
-              </a>
-            </div>
-          </div>
-
+        </div>
+        <div id="pagination" class="d-flex justify-content-center mt-3"></div>
       </div>
 
     </section><!-- End Venue Section -->
@@ -169,6 +148,83 @@
   <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+  <script>
+      let imagesData = [];
+      let currentPage = 1;
+      const imagesPerPage = 7;  // total 6 images per page.
+
+      async function fetchImages() {
+        const response = await fetch('https://script.google.com/macros/s/AKfycbw6xqO-7gNK9J8u7CA_OMokMVm3wHuRX2l3lKy6GhG68qbZQI30AZTCrYKj1tNorSk/exec'); 
+        imagesData = await response.json();
+
+        // Reverse the order to show latest images first
+        imagesData.reverse();
+
+        renderImages();
+        renderPagination();
+      }
+
+      // Function to render images dynamically
+      function renderImages() {
+            const gallery = document.getElementById('image-gallery');
+            gallery.innerHTML = ""; // Clear previous content
+
+            const start = (currentPage - 1) * imagesPerPage;
+            const end = start + imagesPerPage;
+            const paginatedImages = imagesData.slice(start, end);
+
+            paginatedImages.forEach(image => {
+              const imageElement = document.createElement('div');
+              imageElement.classList.add('col-6', 'col-sm-4', 'col-md-3', 'col-lg-2');
+              imageElement.innerHTML = `
+                <div class="venue-gallery">
+                  <a href="${image.largeLink}" class="glightbox" data-gall="venue-gallery">
+                    <img src="${image.thumbnailLink}" alt="${image.caption}" class="img-fluid" loading="lazy">
+                  </a>
+                </div>
+              `;
+              gallery.appendChild(imageElement);
+            });
+            // Reinitialize Lightbox
+            initializeLightbox();
+          }
+
+      function renderPagination() {
+        const totalPages = Math.ceil(imagesData.length / imagesPerPage);
+        const paginationContainer = document.getElementById('pagination');
+        paginationContainer.innerHTML = ""; // Clear previous pagination
+
+        if (totalPages > 1) {
+          for (let i = 1; i <= totalPages; i++) {
+            const pageButton = document.createElement('button');
+            pageButton.classList.add('btn', 'btn-secondary', 'm-1');
+            pageButton.textContent = i;
+            pageButton.onclick = () => {
+              currentPage = i;
+              renderImages();
+              highlightActivePage();
+            };
+            paginationContainer.appendChild(pageButton);
+          }
+          highlightActivePage();
+        }
+      }
+
+      function initializeLightbox() {
+        if (window.lightboxInstance) {
+          window.lightboxInstance.destroy(); // Remove existing instance
+        }
+        window.lightboxInstance = GLightbox({ selector: '.glightbox' }); // Reinitialize Lightbox
+      }
+
+      function highlightActivePage() {
+        const buttons = document.querySelectorAll('#pagination button');
+        buttons.forEach(btn => btn.classList.remove('btn-primary'));
+        buttons[currentPage - 1].classList.add('btn-primary');
+      }
+
+      window.onload = fetchImages;
+</script>
 
 </body>
 
